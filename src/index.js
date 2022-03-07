@@ -21,7 +21,7 @@ const createScene = function () {
     box.position.y = 4;
     box.checkCollisions = true;
 
-    const camera = new FirstPersonCamera("FPCamera");
+    const camera = new FirstPersonCamera("FPCamera", scene);
     camera.attachControl(canvas, true);
     // const camera = new BABYLON.ArcRotateCamera("camera", -Math.PI / 2, Math.PI / 2.5, 15, new BABYLON.Vector3(0, 0, 0));
     

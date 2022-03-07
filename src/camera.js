@@ -1,6 +1,6 @@
 import * as BABYLON from '@babylonjs/core/Legacy/legacy';
 
-function FirstPersonCamera(cameraName) {
+function FirstPersonCamera(cameraName, scene) {
     const camera = new BABYLON.UniversalCamera(cameraName, new BABYLON.Vector3(0, 6, -10));
     camera.applyGravity = true;
     camera.ellipsoid = new BABYLON.Vector3(3, 3, 1);
@@ -10,8 +10,31 @@ function FirstPersonCamera(cameraName) {
     camera.speed = 0.02;
     camera.angularSpeed = 0.05;
     camera.angle = Math.PI/2;
+    camera.position = new BABYLON.Vector3(-3, 6, -3);
     camera.direction = new BABYLON.Vector3(Math.cos(camera.angle), 0, Math.sin(camera.angle));
 
+    const cameraJump = function() {
+        camera.animations = [];
+
+        const a = new BABYLON.Animation(
+            "jump",
+            "position.y", 20,
+            BABYLON.Animation.ANIMATIONTYPE_FLOAT,
+            BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE
+        );
+        var keys = [];
+        keys.push({ frame: 0, value: camera.position.y});
+        keys.push({ frame: 8, value: camera.position.y + 10});
+        keys.push({ frame: 13, value: camera.position.y});
+        a.setKeys(keys);
+
+        var easingFunction = new BABYLON.CircleEase();
+        easingFunction.setEasingMode(BABYLON.EasingFunction.EASINGMODE_EASEINOUT);
+        a.setEasingFunction(easingFunction);
+        camera.animations.push(a);
+
+        scene.beginAnimation(camera, 0, 20, false);
+    }
 
     //Camera settings start
     //First remove the default management.
@@ -25,6 +48,7 @@ function FirstPersonCamera(cameraName) {
         this.keysDown = [40, 83];
         this.keysLeft = [37, 65];
         this.keysRight = [39, 68];
+        this.keysJump = [32];
     }
     
     //Add attachment controls
@@ -56,6 +80,15 @@ function FirstPersonCamera(cameraName) {
                         var index = _this._keys.indexOf(evt.keyCode);
                         if (index >= 0) {
                             _this._keys.splice(index, 1);
+                        }
+                        if (!noPreventDefault) {
+                            evt.preventDefault();
+                        }
+                    } else if (_this.keysJump.indexOf(evt.keyCode) !== -1) { 
+                        //Handle on key up the jump key
+                        var index = _this._keys.indexOf(evt.keyCode);
+                        if (index === -1) {
+                            _this._keys.push(evt.keyCode);
                         }
                         if (!noPreventDefault) {
                             evt.preventDefault();
@@ -92,20 +125,23 @@ function FirstPersonCamera(cameraName) {
                     var keyCode = this._keys[index];
                     var speed = camera.speed;
                     if (this.keysLeft.indexOf(keyCode) !== -1) {
-                        camera.direction.copyFromFloats(-speed, 0, 0);
-                        // camera.rotation.y -= camera.angularSpeed;
-                        // camera.direction.copyFromFloats(0, 0, 0);                
+                        camera.direction.copyFromFloats(-speed, 0, 0);             
                     }
                     else if (this.keysUp.indexOf(keyCode) !== -1) {
                         camera.direction.copyFromFloats(0, 0, speed);               
                     }
                     else if (this.keysRight.indexOf(keyCode) !== -1) {
                         camera.direction.copyFromFloats(speed, 0, 0);
-                        // camera.rotation.y += camera.angularSpeed;
-                        // camera.direction.copyFromFloats(0, 0, 0);
                     }
                     else if (this.keysDown.indexOf(keyCode) !== -1) {
                         camera.direction.copyFromFloats(0, 0, -speed);
+                    } else if (this.keysJump.indexOf(keyCode) !== -1) {
+                        //Pop jump key code
+                        var index = this._keys.indexOf(keyCode);
+                        if (index >= 0) {
+                            this._keys.splice(index, 1);
+                        }
+                        cameraJump();
                     }
                     if (camera.getScene().useRightHandedSystem) {
                         camera.direction.z *= -1;
