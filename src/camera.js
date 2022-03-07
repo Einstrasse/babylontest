@@ -24,7 +24,7 @@ function FirstPersonCamera(cameraName, scene) {
         );
         var keys = [];
         keys.push({ frame: 0, value: camera.position.y});
-        keys.push({ frame: 8, value: camera.position.y + 10});
+        keys.push({ frame: 8, value: camera.position.y + 3});
         keys.push({ frame: 13, value: camera.position.y});
         a.setKeys(keys);
 
@@ -44,6 +44,7 @@ function FirstPersonCamera(cameraName, scene) {
     //Key Input Manager To Use Keys to Move Forward and BackWard and Look to the Left or Right
     var FreeCameraKeyboardWalkInput = function () {
         this._keys = [];
+        this._upKeys = [];
         this.keysUp = [38, 87];
         this.keysDown = [40, 83];
         this.keysLeft = [37, 65];
@@ -84,11 +85,12 @@ function FirstPersonCamera(cameraName, scene) {
                         if (!noPreventDefault) {
                             evt.preventDefault();
                         }
-                    } else if (_this.keysJump.indexOf(evt.keyCode) !== -1) { 
+                    }
+                    if (_this.keysJump.indexOf(evt.keyCode) !== -1) { 
                         //Handle on key up the jump key
-                        var index = _this._keys.indexOf(evt.keyCode);
+                        var index = _this._upKeys.indexOf(evt.keyCode);
                         if (index === -1) {
-                            _this._keys.push(evt.keyCode);
+                            _this._upKeys.push(evt.keyCode);
                         }
                         if (!noPreventDefault) {
                             evt.preventDefault();
@@ -135,13 +137,6 @@ function FirstPersonCamera(cameraName, scene) {
                     }
                     else if (this.keysDown.indexOf(keyCode) !== -1) {
                         camera.direction.copyFromFloats(0, 0, -speed);
-                    } else if (this.keysJump.indexOf(keyCode) !== -1) {
-                        //Pop jump key code
-                        var index = this._keys.indexOf(keyCode);
-                        if (index >= 0) {
-                            this._keys.splice(index, 1);
-                        }
-                        cameraJump();
                     }
                     if (camera.getScene().useRightHandedSystem) {
                         camera.direction.z *= -1;
@@ -149,6 +144,23 @@ function FirstPersonCamera(cameraName, scene) {
                     camera.getViewMatrix().invertToRef(camera._cameraTransformMatrix);
                     BABYLON.Vector3.TransformNormalToRef(camera.direction, camera._cameraTransformMatrix, camera._transformedDirection);
                     camera.cameraDirection.addInPlace(camera._transformedDirection);
+                }
+            }
+            if (this._onKeyUp) {
+                var camera = this.camera;
+                for (var index = 0; index < this._upKeys.length; index++) {
+                    var keyCode = this._upKeys[index];
+                    if (this.keysJump.indexOf(keyCode) !== -1) {
+                        //Pop jump key code
+                        var index = this._upKeys.indexOf(keyCode);
+                        if (index >= 0) {
+                            this._upKeys.splice(index, 1);
+                        }
+                        cameraJump();
+                        camera.getViewMatrix().invertToRef(camera._cameraTransformMatrix);
+                        BABYLON.Vector3.TransformNormalToRef(camera.direction, camera._cameraTransformMatrix, camera._transformedDirection);
+                        camera.cameraDirection.addInPlace(camera._transformedDirection);
+                    }
                 }
             }
         };
