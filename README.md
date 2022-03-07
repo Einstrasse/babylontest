@@ -10,11 +10,11 @@ npm i
 ## 개발용 서버 run
 
 ```bash
-npm serve
+npm run serve
 ```
 
 ## 프로덕션용 서버 빌드
 ```bash
-npm build
+npm run build
 
 ```

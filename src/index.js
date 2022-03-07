@@ -1,7 +1,9 @@
+import * as BABYLON from '@babylonjs/core/Legacy/legacy';
 import { Engine } from "@babylonjs/core/Engines/engine";
 import { Scene } from "@babylonjs/core/scene";
 import { Vector3 } from "@babylonjs/core/Maths/math";
 import { FreeCamera } from "@babylonjs/core/Cameras/freeCamera";
+import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 
@@ -21,6 +23,7 @@ var scene = new Scene(engine);
 
 // This creates and positions a free camera (non-mesh)
 var camera = new FreeCamera("camera1", new Vector3(0, 5, -10), scene);
+// var camera = new ArcRotateCamera("camera1", -Math.PI / 2, Math.PI / 2.5, 3, new Vector3(0, 5, -10), scene);
 
 // This targets the camera to scene origin
 camera.setTarget(Vector3.Zero());
@@ -47,10 +50,12 @@ sphere.position.y = 2;
 sphere.material = material;
 
 // Our built-in 'ground' shape. Params: name, width, depth, subdivs, scene
-var ground = Mesh.CreateGround("ground1", 6, 6, 2, scene);
+// var ground = Mesh.CreateGround("ground1", 6, 6, 2, scene);
+
+BABYLON.SceneLoader.ImportMeshAsync(["ground", "semi_house"], "https://assets.babylonjs.com/meshes/", "both_houses_scene.babylon");
 
 // Affect a material
-ground.material = material;
+// ground.material = material;
 
 // Render every frame
 engine.runRenderLoop(() => {
