@@ -23,6 +23,9 @@ const createScene = function () {
 
     const camera = new FirstPersonCamera("FPCamera", scene);
     camera.attachControl(canvas, true);
+    scene.initAfterRender = function() {
+        camera.initAfterRender();
+    }
     // const camera = new BABYLON.ArcRotateCamera("camera", -Math.PI / 2, Math.PI / 2.5, 15, new BABYLON.Vector3(0, 0, 0));
     
     //Camera settings end
@@ -48,13 +51,14 @@ const createScene = function () {
 };
 
 const scene = createScene(); //Call the createScene function
-
+scene.render();
+scene.initAfterRender();
 // Register a render loop to repeatedly render the scene
 engine.runRenderLoop(function () {
-        scene.render();
+    scene.render();
 });
 
 // Watch for browser/canvas resize events
 window.addEventListener("resize", function () {
-        engine.resize();
+    engine.resize();
 });

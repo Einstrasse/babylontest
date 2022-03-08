@@ -13,6 +13,17 @@ function FirstPersonCamera(cameraName, scene) {
     camera.position = new BABYLON.Vector3(-3, 6, -3);
     camera.direction = new BABYLON.Vector3(Math.cos(camera.angle), 0, Math.sin(camera.angle));
 
+    camera.initAfterRender = function() {
+        camera.direction.copyFromFloats(0, 0, 0);
+        applyCameraPosition();
+    }
+
+    const applyCameraPosition = function() {
+        camera.getViewMatrix().invertToRef(camera._cameraTransformMatrix);
+        BABYLON.Vector3.TransformNormalToRef(camera.direction, camera._cameraTransformMatrix, camera._transformedDirection);
+        camera.cameraDirection.addInPlace(camera._transformedDirection);
+    }
+
     const cameraJump = function() {
         camera.animations = [];
 
@@ -33,7 +44,9 @@ function FirstPersonCamera(cameraName, scene) {
         a.setEasingFunction(easingFunction);
         camera.animations.push(a);
 
-        scene.beginAnimation(camera, 0, 20, false);
+        scene.beginAnimation(camera, 0, 13, false, 1.0, ()=> {
+            // alert("Land");
+        });
     }
 
     //Camera settings start
@@ -141,9 +154,8 @@ function FirstPersonCamera(cameraName, scene) {
                     if (camera.getScene().useRightHandedSystem) {
                         camera.direction.z *= -1;
                     }
-                    camera.getViewMatrix().invertToRef(camera._cameraTransformMatrix);
-                    BABYLON.Vector3.TransformNormalToRef(camera.direction, camera._cameraTransformMatrix, camera._transformedDirection);
-                    camera.cameraDirection.addInPlace(camera._transformedDirection);
+                    
+                    applyCameraPosition();
                 }
             }
             if (this._onKeyUp) {
@@ -157,9 +169,7 @@ function FirstPersonCamera(cameraName, scene) {
                             this._upKeys.splice(index, 1);
                         }
                         cameraJump();
-                        camera.getViewMatrix().invertToRef(camera._cameraTransformMatrix);
-                        BABYLON.Vector3.TransformNormalToRef(camera.direction, camera._cameraTransformMatrix, camera._transformedDirection);
-                        camera.cameraDirection.addInPlace(camera._transformedDirection);
+                        applyCameraPosition();
                     }
                 }
             }
