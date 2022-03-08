@@ -1,8 +1,10 @@
 import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
 import "@babylonjs/loaders/glTF";
-import { Engine, Scene, Matrix, FreeCamera, Mesh, HemisphericLight, Vector3, MeshBuilder, Quaternion, SceneLoader, TransformNode, Camera } from '@babylonjs/core';
+import { Engine, Scene, Matrix, FreeCamera, Mesh, HemisphericLight, Vector3, MeshBuilder, Quaternion, SceneLoader, TransformNode, Camera, ShadowGenerator, PointLight, Color3 } from '@babylonjs/core';
 import { GridMaterial } from '@babylonjs/materials';
+import { Player } from './characterController';
+import { PlayerInput } from './inputController';
 
 enum State { START = 0, GAME = 1, LOSE = 2, CUTSCENE = 3 }
 
@@ -16,6 +18,8 @@ class App {
     private _engine: Engine;
     private _camRoot: TransformNode;
     private _yTilt: TransformNode;
+    private _player: Player;
+    private _input: PlayerInput;
 
 
     private _state : State;
@@ -112,19 +116,19 @@ class App {
         });
     }
 
-    private _createGameScene(): Scene {
-        let scene = new Scene(this._engine);
+    private _createGameScene(scene: Scene): Scene {
+        // let scene = new Scene(this._engine);
         // scene.clearColor = new Color4(0, 0, 0, 1);
     
                 
-        var light1: HemisphericLight = new HemisphericLight("light1", new Vector3(1, 1, 0), scene);
+        // var light1: HemisphericLight = new HemisphericLight("light1", new Vector3(1, 1, 0), scene);
         var sphere: Mesh = MeshBuilder.CreateSphere("sphere", { diameter: 1 }, scene);
         sphere.position.y = 0.5;
         sphere.position.x = 3;
     
-        let camera: FreeCamera = new FreeCamera("Camera", new Vector3(5, 5, -5), scene);
-        camera.attachControl(this._canvas, true);
-        camera.setTarget(Vector3.Zero());
+        // let camera: FreeCamera = new FreeCamera("Camera", new Vector3(5, 5, -5), scene);
+        // camera.attachControl(this._canvas, true);
+        // camera.setTarget(Vector3.Zero());
 
         const material = new GridMaterial("groundMaterial", scene);
         material.gridRatio = 0.1;
@@ -150,14 +154,34 @@ class App {
         await this._setUpGame();
         this._engine.hideLoadingUI();
     }
+
+    private async _initGameAsync(scene): Promise<void> {
+        //temporary light to light the entire scene
+        var light0 = new HemisphericLight("HemiLight", new Vector3(0, 1, 0), scene);
+
+        const light = new PointLight("sparklight", new Vector3(0, 0, 0), scene);
+        light.diffuse = new Color3(0.08627450980392157, 0.10980392156862745, 0.15294117647058825);
+        light.intensity = 0.3;
+        light.radius = 1;
+
+        const shadowGenerator = new ShadowGenerator(1024, light);
+        shadowGenerator.darkness = 0.4;
+
+        //Create the player
+        this._player = new Player(this.assets, scene, shadowGenerator, this._input); //dont have inputs yet so we dont need to pass it in
+        const camera = this._player.activatePlayerCamera();
+    }
     
     private async _setUpGame() {
-        let scene = this._createGameScene();
+        let scene = new Scene(this._engine);
+        this._input = new PlayerInput(scene);
+        await this._loadCharacterAssets(scene);
+        await this._initGameAsync(scene);
+        scene = this._createGameScene(scene);
         await scene.whenReadyAsync();
         this._scene.dispose();
         this._scene = scene;
         this._state = State.START;
-        await this._loadCharacterAssets(scene);
     }
 }
 new App();
