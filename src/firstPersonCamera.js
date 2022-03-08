@@ -1,11 +1,12 @@
 import * as BABYLON from '@babylonjs/core/Legacy/legacy';
 
 function FirstPersonCamera(cameraName, scene) {
+    this.scene = scene;
+    
     const camera = new BABYLON.UniversalCamera(cameraName, new BABYLON.Vector3(0, 6, -10));
     camera.applyGravity = true;
     camera.ellipsoid = new BABYLON.Vector3(3, 3, 1);
     camera.setTarget(BABYLON.Vector3.Zero());
-    // camera.attachControl(canvas, true);
     camera.checkCollisions = true;
     camera.speed = 0.02;
     camera.angularSpeed = 0.05;
@@ -18,6 +19,30 @@ function FirstPersonCamera(cameraName, scene) {
         applyCameraPosition();
     }
 
+    const _floorRaycast = function(offsetx, offsetz, raycastlen) {
+        let raycastFloorPos = new BABYLON.Vector3(camera.position.x + offsetx, camera.position.y + 0.5, camera.position.z + offsetz);
+        let ray = new BABYLON.Ray(raycastFloorPos, BABYLON.Vector3.Up().scale(-1), raycastlen);
+
+        let predicate = function(mesh) {
+            return mesh.isPickable && mesh.isEnabled();
+        }
+
+        let pick = scene.pickWithRay(ray, predicate);
+        if (pick.hit) { //grounded
+            return pick.pickedPoint;
+        } else {
+            return BABYLON.Vector3.Zero();
+        }
+    }
+
+    const _isGrounded = function() {
+        if (_floorRaycast(0, 0, 7).equals(BABYLON.Vector3.Zero())) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
     const applyCameraPosition = function() {
         camera.getViewMatrix().invertToRef(camera._cameraTransformMatrix);
         BABYLON.Vector3.TransformNormalToRef(camera.direction, camera._cameraTransformMatrix, camera._transformedDirection);
@@ -25,6 +50,8 @@ function FirstPersonCamera(cameraName, scene) {
     }
 
     const cameraJump = function() {
+        // console.log(`Grounded ${_isGrounded()}`);
+        if (_isGrounded() === false) return;
         camera.animations = [];
 
         const a = new BABYLON.Animation(
@@ -35,7 +62,7 @@ function FirstPersonCamera(cameraName, scene) {
         );
         var keys = [];
         keys.push({ frame: 0, value: camera.position.y});
-        keys.push({ frame: 8, value: camera.position.y + 3});
+        keys.push({ frame: 8, value: camera.position.y + 4});
         keys.push({ frame: 13, value: camera.position.y});
         a.setKeys(keys);
 
@@ -44,9 +71,8 @@ function FirstPersonCamera(cameraName, scene) {
         a.setEasingFunction(easingFunction);
         camera.animations.push(a);
 
-        scene.beginAnimation(camera, 0, 13, false, 1.0, ()=> {
-            // alert("Land");
-        });
+        scene.beginAnimation(camera, 0, 13, false);
+        applyCameraPosition();
     }
 
     //Camera settings start
@@ -54,15 +80,26 @@ function FirstPersonCamera(cameraName, scene) {
     camera.inputs.removeByType("FreeCameraKeyboardMoveInput");
     camera.inputs.removeByType("FreeCameraMouseInput");
      
+    const KEY = {
+        SPACE: 32,
+        ARROW_UP: 38,
+        ARROW_LEFT: 37,
+        ARROW_DOWN: 40,
+        ARROW_RIGHT: 39,
+        W: 87,
+        A: 65,
+        S: 83,
+        D: 68
+    }
     //Key Input Manager To Use Keys to Move Forward and BackWard and Look to the Left or Right
     var FreeCameraKeyboardWalkInput = function () {
         this._keys = [];
         this._upKeys = [];
-        this.keysUp = [38, 87];
-        this.keysDown = [40, 83];
-        this.keysLeft = [37, 65];
-        this.keysRight = [39, 68];
-        this.keysJump = [32];
+        this.keysUp = [KEY.ARROW_UP, KEY.W];
+        this.keysDown = [KEY.S, KEY.ARROW_DOWN];
+        this.keysLeft = [KEY.A, KEY.ARROW_LEFT];
+        this.keysRight = [KEY.D, KEY.ARROW_RIGHT];
+        this.keysJump = [KEY.SPACE];
     }
     
     //Add attachment controls
@@ -169,7 +206,7 @@ function FirstPersonCamera(cameraName, scene) {
                             this._upKeys.splice(index, 1);
                         }
                         cameraJump();
-                        applyCameraPosition();
+                        
                     }
                 }
             }

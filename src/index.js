@@ -1,6 +1,6 @@
 import * as BABYLON from '@babylonjs/core/Legacy/legacy';
 import * as MATERIALS from '@babylonjs/materials/legacy/legacy';
-import { FirstPersonCamera } from './camera';
+import { FirstPersonCamera } from './firstPersonCamera';
 
 // Required side effects to populate the Create methods on the mesh class. Without this, the bundle would be smaller but the createXXX methods from mesh would not be accessible.
 import "@babylonjs/core/Meshes/meshBuilder";
