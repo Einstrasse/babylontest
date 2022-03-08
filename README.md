@@ -18,3 +18,7 @@ npm run start
 npm run build
 
 ```
+
+# References
+- https://doc.babylonjs.com/guidedLearning/createAGame
+- https://github.com/BabylonJS/Babylon.js/blob/master/Playground/scenes/Dude/dude.babylon

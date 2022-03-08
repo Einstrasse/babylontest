@@ -23,6 +23,10 @@ const config = {
         host: 'localhost',
         port: 8008,
         hot: true,
+        static: {
+            directory: path.join(__dirname, 'models'),
+            publicPath: '/models',
+        },
     },
     plugins: [
         new HtmlWebpackPlugin({
