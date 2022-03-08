@@ -10,7 +10,7 @@ npm i
 ## 개발용 서버 run
 
 ```bash
-npm run serve
+npm run start
 ```
 
 ## 프로덕션용 서버 빌드
