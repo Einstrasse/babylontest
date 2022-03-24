@@ -1,4 +1,4 @@
-import { Engine, Scene, UniversalCamera, FreeCamera, Mesh, HemisphericLight, Vector3, MeshBuilder, Color4, SceneLoader, Quaternion, TransformNode, Camera, ShadowGenerator, ArcRotateCamera } from '@babylonjs/core';
+import { Engine, Scene, UniversalCamera, FreeCamera, Mesh, HemisphericLight, Vector3, MeshBuilder, Color4, SceneLoader, Quaternion, TransformNode, Camera, ShadowGenerator, ArcRotateCamera, Skeleton } from '@babylonjs/core';
 import { PlayerInput } from "./inputController";
 
 export class Player extends TransformNode {
@@ -18,10 +18,12 @@ export class Player extends TransformNode {
  
     private static readonly ORIGINAL_TILT: Vector3 = new Vector3(0.3534119456780721, 0, 0);
 
-    private static readonly PLAYER_SPEED: number = 0.25;
+    private static readonly PLAYER_SPEED: number = 0.025;
 
     //Player
     public mesh: Mesh; //outer collision box of player
+    public skeleton: Skeleton;
+    public isAnimationWalking: Boolean;
 
     public tutorial_move;
 
@@ -31,9 +33,12 @@ export class Player extends TransformNode {
         this._setupPlayerCamera();
         this.mesh = assets.mesh;
         this.mesh.parent = this;
+        this.skeleton = assets.skeleton;
 
         shadowGenerator.addShadowCaster(assets.mesh);
         this._input = input;
+        this.isAnimationWalking = false;
+
     }
 
     public activatePlayerCamera(): UniversalCamera {
@@ -88,9 +93,19 @@ export class Player extends TransformNode {
         this._h = this._input.horizontal; //right, x
         this._v = this._input.vertical; //fwd, z
 
+            
+        if (this._input.isWalking == true && this.isAnimationWalking == false) {
+            this.scene.beginAnimation(this.skeleton, 0, 100, true, 1.0);
+            this.isAnimationWalking = true;
+        } else if (this._input.isWalking == false && this.isAnimationWalking == true) {
+            this.scene.stopAnimation(this.skeleton);
+            this.isAnimationWalking = false;
+        }
+
         //tutorial, if the player moves for the first time
         if((this._h != 0 || this._v != 0) && !this.tutorial_move){
             this.tutorial_move = true;
+            
         }
         //--MOVEMENTS BASED ON CAMERA (as it rotates)--
         let fwd = this._camRoot.forward;
@@ -124,7 +139,7 @@ export class Player extends TransformNode {
 
         //rotation based on input & the camera angle
         let angle = Math.atan2(this._input.horizontalAxis, this._input.verticalAxis);
-        angle += this._camRoot.rotation.y;
+        angle += this._camRoot.rotation.y + Math.PI;
         let targ = Quaternion.FromEulerAngles(0, angle, 0);
         this.mesh.rotationQuaternion = Quaternion.Slerp(this.mesh.rotationQuaternion, targ, 10 * this._deltaTime);
     }

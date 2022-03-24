@@ -9,6 +9,7 @@ export class PlayerInput {
     //tracks whether or not there is movement in that axis
     public horizontalAxis: number = 0;
     public verticalAxis: number = 0;
+    public isWalking: boolean = false;
 
 
     constructor(scene: Scene) {
@@ -52,6 +53,7 @@ export class PlayerInput {
             this.horizontal = 0;
             this.horizontalAxis = 0;
         }
+        this.isWalking = (this.verticalAxis | this.horizontalAxis) != 0;
     }
 
 }

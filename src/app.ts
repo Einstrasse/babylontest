@@ -94,7 +94,7 @@ class App {
                 root.scaling.x = 0.02;
                 root.scaling.y = 0.02;
                 root.scaling.z = 0.02;
-
+                
                 //body is our actual player mesh
                 const body = root;
                 body.parent = outer;
@@ -102,11 +102,12 @@ class App {
                 body.getChildMeshes().forEach(m => {
                     m.isPickable = false;
                 })
-                
+
                 //return the mesh and animations
                 return {
                     mesh: outer as Mesh,
-                    animationGroups: result.animationGroups
+                    animationGroups: result.animationGroups,
+                    skeleton: result.skeletons[0]
                 }
             });
         }
