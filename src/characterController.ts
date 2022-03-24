@@ -1,4 +1,4 @@
-import { Engine, Scene, UniversalCamera, FreeCamera, Mesh, HemisphericLight, Vector3, MeshBuilder, Color4, SceneLoader, Quaternion, TransformNode, Camera, ShadowGenerator, ArcRotateCamera, Skeleton, Animatable } from '@babylonjs/core';
+import { Engine, Scene, UniversalCamera, FreeCamera, Mesh, HemisphericLight, Vector3, MeshBuilder, Color4, SceneLoader, Quaternion, TransformNode, Camera, ShadowGenerator, ArcRotateCamera, Skeleton, Animatable, Ray } from '@babylonjs/core';
 import { PlayerInput } from "./inputController";
 
 export class Player extends TransformNode {
@@ -12,13 +12,19 @@ export class Player extends TransformNode {
     private _deltaTime: number = 0;
     private _h: number; //x-axis
     private _v: number; //z-axis
+    private _grounded: boolean;
+    private _gravity: Vector3 = new Vector3();
 
     private _moveDirection: Vector3 = new Vector3(); // vector that holds movement information
     private _inputAmt: number;
  
     private static readonly ORIGINAL_TILT: Vector3 = new Vector3(0.3534119456780721, 0, 0);
 
-    private static readonly PLAYER_SPEED: number = 0.025;
+    //const values
+    private static readonly PLAYER_SPEED: number = 0.025 * 2;
+    private static readonly GRAVITY: number = 0.01;
+    private static readonly WALK_ANIMATION_SPEED: number = 1.0 * 2;
+
 
     //Player
     public mesh: Mesh; //outer collision box of player
@@ -51,10 +57,52 @@ export class Player extends TransformNode {
         return this.camera;
     }
 
+        //--GROUND DETECTION--
+    //Send raycast to the floor to detect if there are any hits with meshes below the character
+    private _floorRaycast(offsetx: number, offsetz: number, raycastlen: number): Vector3 {
+        //position the raycast from bottom center of mesh
+        let raycastFloorPos = new Vector3(this.mesh.position.x + offsetx, this.mesh.position.y + 0.5, this.mesh.position.z + offsetz);
+        let ray = new Ray(raycastFloorPos, Vector3.Up().scale(-1), raycastlen);
+
+        //defined which type of meshes should be pickable
+        let predicate = function (mesh) {
+            return mesh.isPickable && mesh.isEnabled();
+        }
+
+        let pick = this.scene.pickWithRay(ray, predicate);
+
+        if (pick.hit) { //grounded
+            return pick.pickedPoint;
+        } else { //not grounded
+            return Vector3.Zero();
+        }
+    }
+
+    //raycast from the center of the player to check for whether player is grounded
+    private _isGrounded(): boolean {
+        if (this._floorRaycast(0, 0, .6).equals(Vector3.Zero())) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    private _updateGroundDetection(): void {
+        this._grounded = this._isGrounded();
+        if (this._grounded) {
+            this._gravity.y = 0;
+        } else {
+            this._gravity.y = -Player.GRAVITY;
+        }
+        //move our mesh
+        this.mesh.moveWithCollisions(this._moveDirection.addInPlace(this._gravity));
+    }
+
     private _beforeRenderUpdate(): void {
         this._updateFromControls();
-        //move our mesh
-        this.mesh.moveWithCollisions(this._moveDirection);
+        this._updateGroundDetection();
+        
+        
     }
 
     private _setupPlayerCamera(): UniversalCamera {
@@ -96,7 +144,7 @@ export class Player extends TransformNode {
         // Smoothing walking animation
         if (this._input.isWalking == true) {
             if (this.walkingAnimation == null) {
-                this.walkingAnimation = this.scene.beginAnimation(this.skeleton, 0, 100, true, 1.0);
+                this.walkingAnimation = this.scene.beginAnimation(this.skeleton, 0, 100, true, Player.WALK_ANIMATION_SPEED);
             } else if (this.walkingAnimation.animationStarted == false) {
                 this.walkingAnimation.restart();
             }

@@ -5,6 +5,7 @@ import { Engine, Scene, Matrix, FreeCamera, Mesh, HemisphericLight, Vector3, Mes
 import { GridMaterial } from '@babylonjs/materials';
 import { Player } from './characterController';
 import { PlayerInput } from './inputController';
+import { Environment } from "./environment";
 
 enum State { START = 0, GAME = 1, LOSE = 2, CUTSCENE = 3 }
 
@@ -23,6 +24,7 @@ class App {
 
 
     private _state : State;
+    private _environment: Environment;
 
     private _createCanvas() : HTMLCanvasElement {
         var canvas = document.createElement("canvas");
@@ -117,38 +119,6 @@ class App {
         });
     }
 
-    private _createGameScene(scene: Scene): Scene {
-        // let scene = new Scene(this._engine);
-        // scene.clearColor = new Color4(0, 0, 0, 1);
-    
-                
-        // var light1: HemisphericLight = new HemisphericLight("light1", new Vector3(1, 1, 0), scene);
-        var sphere: Mesh = MeshBuilder.CreateSphere("sphere", { diameter: 1 }, scene);
-        sphere.position.y = 0.5;
-        sphere.position.x = 3;
-    
-        // let camera: FreeCamera = new FreeCamera("Camera", new Vector3(5, 5, -5), scene);
-        // camera.attachControl(this._canvas, true);
-        // camera.setTarget(Vector3.Zero());
-
-        const material = new GridMaterial("groundMaterial", scene);
-        material.gridRatio = 0.1;
-
-        SceneLoader.ImportMeshAsync(["ground", "semi_house"], "https://assets.babylonjs.com/meshes/", "both_houses_scene.babylon").then((res) => {
-            const ground = scene.getMeshByName("ground");
-            const house = res.meshes[1];
-            ground.scaling.x = 5;
-            ground.scaling.z = 5;
-            ground.material = material;
-            ground.checkCollisions = true;
-
-            house.position.x = 2;
-            house.position.z = 2;
-        });
-
-        return scene;
-    }
-
     private async _goToStart() {
         this._engine.displayLoadingUI();
         this._scene.detachControl();
@@ -176,9 +146,11 @@ class App {
     private async _setUpGame() {
         let scene = new Scene(this._engine);
         this._input = new PlayerInput(scene);
+        const environment = new Environment(scene);
+        await environment.load();
+        this._environment = environment;
         await this._loadCharacterAssets(scene);
         await this._initGameAsync(scene);
-        scene = this._createGameScene(scene);
         await scene.whenReadyAsync();
         this._scene.dispose();
         this._scene = scene;
