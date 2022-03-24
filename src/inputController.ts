@@ -10,6 +10,7 @@ export class PlayerInput {
     public horizontalAxis: number = 0;
     public verticalAxis: number = 0;
     public isWalking: boolean = false;
+    public cameraRotation: number = 0;
 
 
     constructor(scene: Scene) {
@@ -29,6 +30,14 @@ export class PlayerInput {
     }
 
     private _updateFromKeyboard(): void {
+        if (this.inputMap["a"]) {
+            this.cameraRotation = -1;
+        } else if (this.inputMap["d"]) {
+            this.cameraRotation = +1;
+        } else {
+            this.cameraRotation = 0;
+        }
+
         if (this.inputMap["ArrowUp"]) {
             this.vertical = Scalar.Lerp(this.vertical, 1, 0.2);
             this.verticalAxis = 1;

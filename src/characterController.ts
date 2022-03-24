@@ -1,4 +1,4 @@
-import { Engine, Scene, UniversalCamera, FreeCamera, Mesh, HemisphericLight, Vector3, MeshBuilder, Color4, SceneLoader, Quaternion, TransformNode, Camera, ShadowGenerator, ArcRotateCamera, Skeleton, Animatable, Ray } from '@babylonjs/core';
+import { Engine, Scene, UniversalCamera, FreeCamera, Mesh, HemisphericLight, Vector3, MeshBuilder, Color4, SceneLoader, Quaternion, TransformNode, Camera, ShadowGenerator, ArcRotateCamera, Skeleton, Animatable, Ray, Vector2 } from '@babylonjs/core';
 import { PlayerInput } from "./inputController";
 
 export class Player extends TransformNode {
@@ -7,6 +7,7 @@ export class Player extends TransformNode {
     private _input: PlayerInput;
     private _camRoot : TransformNode;
     private _yTilt: TransformNode;
+    private _camAngle: number = 0;
 
     //player movement vars
     private _deltaTime: number = 0;
@@ -22,8 +23,9 @@ export class Player extends TransformNode {
 
     //const values
     private static readonly PLAYER_SPEED: number = 0.025 * 2;
-    private static readonly GRAVITY: number = 0.01;
+    private static readonly GRAVITY: number = 0.05;
     private static readonly WALK_ANIMATION_SPEED: number = 1.0 * 2;
+    private static readonly CAMERA_ROTATION_SPEED: number = 0.05;
 
 
     //Player
@@ -121,7 +123,8 @@ export class Player extends TransformNode {
 
         //our actual camera that's pointing at our root's position
         this.camera = new UniversalCamera("cam", new Vector3(0, 0, -10), this.scene);
-        this.camera.lockedTarget = this._camRoot.position;
+        // this.camera = new ArcRotateCamera("cam", 0, 0, 10, new Vector3(0, 0, -10), this.scene);
+        // this.camera.lockedTarget = this._camRoot.position;
         this.camera.fov = 0.47350045992678597;
         this.camera.parent = yTilt;
 
@@ -132,6 +135,10 @@ export class Player extends TransformNode {
     private _updateCamera(): void {
         let centerPlayer = this.mesh.position.y + 2;
         this._camRoot.position = Vector3.Lerp(this._camRoot.position, new Vector3(this.mesh.position.x, centerPlayer, this.mesh.position.z), 0.4);
+        if (this._input.cameraRotation !== 0) {
+            console.log("HOOK", this._input.cameraRotation);
+            this._camRoot.rotation.y += this._input.cameraRotation * Player.CAMERA_ROTATION_SPEED;
+        }
     }
 
     private _updateFromControls(): void {
