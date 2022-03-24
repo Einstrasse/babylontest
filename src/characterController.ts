@@ -1,4 +1,4 @@
-import { Engine, Scene, UniversalCamera, FreeCamera, Mesh, HemisphericLight, Vector3, MeshBuilder, Color4, SceneLoader, Quaternion, TransformNode, Camera, ShadowGenerator, ArcRotateCamera, Skeleton } from '@babylonjs/core';
+import { Engine, Scene, UniversalCamera, FreeCamera, Mesh, HemisphericLight, Vector3, MeshBuilder, Color4, SceneLoader, Quaternion, TransformNode, Camera, ShadowGenerator, ArcRotateCamera, Skeleton, Animatable } from '@babylonjs/core';
 import { PlayerInput } from "./inputController";
 
 export class Player extends TransformNode {
@@ -23,7 +23,7 @@ export class Player extends TransformNode {
     //Player
     public mesh: Mesh; //outer collision box of player
     public skeleton: Skeleton;
-    public isAnimationWalking: Boolean;
+    public walkingAnimation: Animatable;
 
     public tutorial_move;
 
@@ -37,7 +37,7 @@ export class Player extends TransformNode {
 
         shadowGenerator.addShadowCaster(assets.mesh);
         this._input = input;
-        this.isAnimationWalking = false;
+        this.walkingAnimation = null;
 
     }
 
@@ -93,13 +93,17 @@ export class Player extends TransformNode {
         this._h = this._input.horizontal; //right, x
         this._v = this._input.vertical; //fwd, z
 
-            
-        if (this._input.isWalking == true && this.isAnimationWalking == false) {
-            this.scene.beginAnimation(this.skeleton, 0, 100, true, 1.0);
-            this.isAnimationWalking = true;
-        } else if (this._input.isWalking == false && this.isAnimationWalking == true) {
-            this.scene.stopAnimation(this.skeleton);
-            this.isAnimationWalking = false;
+        // Smoothing walking animation
+        if (this._input.isWalking == true) {
+            if (this.walkingAnimation == null) {
+                this.walkingAnimation = this.scene.beginAnimation(this.skeleton, 0, 100, true, 1.0);
+            } else if (this.walkingAnimation.animationStarted == false) {
+                this.walkingAnimation.restart();
+            }
+        } else if (this._input.isWalking == false && this.walkingAnimation != null) {
+            if (this.walkingAnimation.animationStarted) {
+                this.walkingAnimation.pause();
+            }
         }
 
         //tutorial, if the player moves for the first time
