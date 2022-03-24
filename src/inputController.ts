@@ -12,6 +12,14 @@ export class PlayerInput {
     public isWalking: boolean = false;
     public cameraRotation: number = 0;
 
+    private static readonly KEYS = {
+        ROTATE_CAMERA_LEFT: "ArrowLeft",
+        ROTATE_CAMERA_RIGHT: "ArrowRight",
+        WALK_FORWARD: "w",
+        WALK_BACKWARD: "s",
+        WALK_LEFT: "a",
+        WALK_RIGHT: "d"
+    };
 
     constructor(scene: Scene) {
         scene.actionManager = new ActionManager(scene);
@@ -30,19 +38,19 @@ export class PlayerInput {
     }
 
     private _updateFromKeyboard(): void {
-        if (this.inputMap["a"]) {
+        if (this.inputMap[PlayerInput.KEYS.ROTATE_CAMERA_LEFT]) {
             this.cameraRotation = -1;
-        } else if (this.inputMap["d"]) {
+        } else if (this.inputMap[PlayerInput.KEYS.ROTATE_CAMERA_RIGHT]) {
             this.cameraRotation = +1;
         } else {
             this.cameraRotation = 0;
         }
 
-        if (this.inputMap["ArrowUp"]) {
+        if (this.inputMap[PlayerInput.KEYS.WALK_FORWARD]) {
             this.vertical = Scalar.Lerp(this.vertical, 1, 0.2);
             this.verticalAxis = 1;
     
-        } else if (this.inputMap["ArrowDown"]) {
+        } else if (this.inputMap[PlayerInput.KEYS.WALK_BACKWARD]) {
             this.vertical = Scalar.Lerp(this.vertical, -1, 0.2);
             this.verticalAxis = -1;
         } else {
@@ -50,11 +58,11 @@ export class PlayerInput {
             this.verticalAxis = 0;
         }
     
-        if (this.inputMap["ArrowLeft"]) {
+        if (this.inputMap[PlayerInput.KEYS.WALK_LEFT]) {
             this.horizontal = Scalar.Lerp(this.horizontal, -1, 0.2);
             this.horizontalAxis = -1;
     
-        } else if (this.inputMap["ArrowRight"]) {
+        } else if (this.inputMap[PlayerInput.KEYS.WALK_RIGHT]) {
             this.horizontal = Scalar.Lerp(this.horizontal, 1, 0.2);
             this.horizontalAxis = 1;
         }
